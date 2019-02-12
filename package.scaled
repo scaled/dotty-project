@@ -5,6 +5,6 @@ descrip: Integrates Dotty LSP server into Scaled.
  weburl: https://github.com/scaled/dotty-project
 license: New BSD
  depend: git:https://github.com/scaled/project-service.git
- depend: mvn:ch.epfl.lamp:dotty-language-server_0.11:0.11.0-RC1
+ depend: mvn:ch.epfl.lamp:dotty-language-server_0.12:0.12.0-RC1
  depend: mvn:io.spray:spray-json_2.12:1.3.4
 
