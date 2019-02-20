@@ -4,7 +4,7 @@
 
 package scaled.project
 
-import java.nio.file.{Files, Path}
+import java.nio.file.{Files, Path, Paths}
 import org.eclipse.lsp4j._
 import scaled._
 import scaled.util.{Close, Filler}
@@ -21,7 +21,9 @@ object Dotty {
     sourceDirectories :Seq[String],
     dependencyClasspath :Seq[String],
     classDirectory :String
-  )
+  ) {
+    def module = if (id startsWith "root/") id substring "/root".length else id
+  }
 
   object DottyIDEProtocol extends DefaultJsonProtocol {
     implicit def scaledSeqFormat[T :JsonFormat] = new RootJsonFormat[Seq[T]] {
@@ -41,7 +43,17 @@ object Dotty {
   }
 
   @Plugin(tag="project-root")
-  class DottyRootPlugin extends RootPlugin.File(ProjectFile)
+  class DottyRootPlugin extends RootPlugin.File(ProjectFile) {
+    override protected def createRoot (paths :List[Path], path :Path) = {
+      val configs = parseDottyConfig(path.resolve(ProjectFile))
+      // figure out which module's source path contains the trigger source file
+      val pathsSet = paths.toSet
+      val module = configs.collectFirst({
+        case cfg if (cfg.sourceDirectories.map(Paths.get(_)).exists(pathsSet)) => cfg.module
+      }) getOrElse ""
+      Project.Root(path, module)
+    }
+  }
 
   @Plugin(tag="langserver")
   class DottyLangPlugin extends LangPlugin {
@@ -69,13 +81,21 @@ object Dotty {
     override def addComponents (project :Project) {
       val rootPath = project.root.path
       val configFile = rootPath.resolve(ProjectFile)
-      val modules = parseDottyConfig(configFile)
-      val main = modules(0) // TODO: handle test project also
+      val configs = parseDottyConfig(configFile)
+      val module = configs.find(_.module == project.root.module) getOrElse configs(0)
 
-      val sourceDirs = main.sourceDirectories.map(rootPath.resolve(_)).toSeq
+      val sourceDirs = module.sourceDirectories.map(rootPath.resolve(_)).toSeq
       project.addComponent(classOf[Sources], new Sources(sourceDirs))
 
-      // TODO: could get most of a JavaComponent out of our Dotty IDE file...
+      val classDir = Paths.get(module.classDirectory)
+      val dependCP = module.dependencyClasspath.map(Paths.get(_))
+      project.addComponent(classOf[JavaComponent], new JavaComponent(project) {
+        def classes = Seq(classDir)
+        def targetDir = classDir
+        def outputDir = classDir
+        def buildClasspath = dependCP
+        def execClasspath = dependCP
+      })
     }
   }
 }
