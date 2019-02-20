@@ -87,15 +87,20 @@ object Dotty {
       val sourceDirs = module.sourceDirectories.map(rootPath.resolve(_)).toSeq
       project.addComponent(classOf[Sources], new Sources(sourceDirs))
 
-      val classDir = Paths.get(module.classDirectory)
       val dependCP = module.dependencyClasspath.map(Paths.get(_))
-      project.addComponent(classOf[JavaComponent], new JavaComponent(project) {
-        def classes = Seq(classDir)
-        def targetDir = classDir
-        def outputDir = classDir
+      val java = new JavaComponent(project) {
+        def classes = Seq(Paths.get(module.classDirectory))
         def buildClasspath = dependCP
         def execClasspath = dependCP
-      })
+      }
+      project.addComponent(classOf[JavaComponent], java)
+      java.addTesters()
+
+      val name = s"${rootPath.getFileName.toString}#${module.module}"
+      val isMain = module.module != "test"
+      val hasTest = configs.exists(_.module == "test")
+      val testRoot = if (isMain && hasTest) Some(Project.Root(rootPath, "test")) else None
+      project.metaV() = Project.Meta(name, Set(), testRoot)
     }
   }
 }
