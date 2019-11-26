@@ -113,7 +113,7 @@ class DottyLangClient (msvc :MetaService, root :Project.Root)
   // TEMP: right now "docs" is just a signature, so syntax highlight it; maybe some day the Dotty
   // langserver will actually return docs in addition to the signature
   override def format (buffer :Buffer, wrapWidth :Int, text :String) =
-    format(buffer, text, "source.scala")
+    formatCode(buffer, text, "source.scala")
 
   // do great violence to type signatures to provide a terse summary
   override def formatSig (rawSig :String) :LineV = {
