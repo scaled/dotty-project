@@ -78,7 +78,7 @@ object Dotty {
   @Plugin(tag="project-resolver")
   class DottyResolverPlugin extends ResolverPlugin {
     override def metaFiles (root :Project.Root) = Seq(root.path.resolve(ProjectFile))
-    override def addComponents (project :Project) {
+    override def addComponents (project :Project) :Unit = {
       val rootPath = project.root.path
       val configFile = rootPath.resolve(ProjectFile)
       val configs = parseDottyConfig(configFile)

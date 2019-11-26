@@ -7,4 +7,4 @@ license: New BSD
  depend: git:https://github.com/scaled/project-service.git
  depend: git:https://github.com/scaled/java-mode.git
  depend: mvn:ch.epfl.lamp:dotty-language-server_0.20:0.20.0-RC1
- depend: mvn:io.spray:spray-json_2.12:1.3.4
+ depend: mvn:io.spray:spray-json_2.13:1.3.5
